@@ -47,3 +47,35 @@ test("personalised items require text and preserve distinct names", () => {
   expect(items).toHaveLength(2);
   expect(items.map((entry) => entry.personalisation)).toEqual(["Sam", "Alex"]);
 });
+
+test("live stock caps bag quantities, removes sold-out variants and respects personalisation limits", () => {
+  const product = {
+    ...demoProducts[0],
+    isDemo: false,
+    personalizable: true,
+    personalisationLimit: 5,
+    variants: [
+      {
+        ...demoProducts[0].variants[0],
+        availability: "stocked" as const,
+        quantity: 2,
+      },
+    ],
+  };
+  const raw = JSON.stringify([
+    {
+      productId: product.id,
+      variantId: product.variants[0].id,
+      quantity: 10,
+      personalisation: "LONG NAME",
+    },
+  ]);
+  const cart = readCart(raw, [product]);
+  expect(cart[0].quantity).toBe(2);
+  expect(cart[0].personalisation).toBe("LONG");
+  expect(
+    readCart(raw, [
+      { ...product, variants: [{ ...product.variants[0], quantity: 0 }] },
+    ]),
+  ).toEqual([]);
+});

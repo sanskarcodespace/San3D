@@ -4,7 +4,7 @@ import { getProducts, getCategories } from "@/features/products/repository";
 export const metadata: Metadata = {
   title: "Shop All — 3D Printed Objects",
   description:
-    "Explore San3D’s demo collection of sculptural decor, personalised gifts, lamps and desk accessories.",
+    "Explore San3D’s collection of sculptural decor, personalised gifts, lamps and desk accessories.",
 };
 export default async function ShopPage() {
   return (

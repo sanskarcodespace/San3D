@@ -22,7 +22,7 @@ export default function ContactPage() {
         <section className="contact-card dark-card">
           <Icon name="spark" size={32} />
           <h2>Let’s talk on WhatsApp.</h2>
-          <p>Share your idea or ask about a concept from the collection.</p>
+          <p>Share your idea or ask about an object from the collection.</p>
           <a
             className="button light"
             href={whatsappUrl()}
@@ -54,9 +54,9 @@ export default function ContactPage() {
         <details>
           <summary>Can I place an order on this website?</summary>
           <p>
-            Not yet. This is a demo storefront. You can explore products and
-            save selections in a local bag, but payments and order placement are
-            unavailable. Message us to discuss an idea.
+            Not yet. Online ordering is not available yet. You can explore
+            products and save selections in a local bag, but payments and order
+            placement are unavailable. Message us to discuss an idea.
           </p>
         </details>
         <details>
@@ -72,7 +72,7 @@ export default function ContactPage() {
           <p>
             We welcome enquiries. Include your quantity, brand requirements,
             budget, and date so we can discuss the brief. No minimum quantity or
-            delivery promise is established on this demo site.
+            delivery promise is established on this website.
           </p>
         </details>
       </section>

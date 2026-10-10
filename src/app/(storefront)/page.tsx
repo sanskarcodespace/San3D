@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getCategories, getProducts } from "@/features/products/repository";
+import {
+  getCategories,
+  getProducts,
+  isDemoCatalogue,
+} from "@/features/products/repository";
 import { ProductCard } from "@/components/storefront/product-card";
 import { Icon } from "@/components/storefront/icon";
 export default async function HomePage() {
@@ -8,12 +12,13 @@ export default async function HomePage() {
     getProducts(),
     getCategories(),
   ]);
-  const collections = [
-    categories[3],
-    categories[1],
-    categories[2],
-    categories[4],
-  ];
+  const demo = isDemoCatalogue();
+  const collections = demo
+    ? [categories[3], categories[1], categories[2], categories[4]].filter(
+        Boolean,
+      )
+    : categories.slice(0, 4);
+  const highlight = products.find((p) => p.featured) ?? products[0];
   return (
     <>
       <section className="hero shell">
@@ -59,12 +64,16 @@ export default async function HomePage() {
             THE EVERYDAY, REIMAGINED — VOL. 01
           </span>
           <Link
-            href="/products/ripple-sculptural-vase"
+            href={highlight ? `/products/${highlight.slug}` : "/shop"}
             className="hero-product"
           >
             <span>
-              <small>Meet your new shelf companion</small>
-              <strong>The Ripple Vase</strong>
+              <small>
+                {highlight
+                  ? "Discover the collection"
+                  : "A new collection is taking shape"}
+              </small>
+              <strong>{highlight?.name ?? "Explore San3D"}</strong>
             </span>
             <span className="circle-arrow">
               <Icon name="arrow" />
@@ -131,12 +140,19 @@ export default async function HomePage() {
             </Link>
           </div>
           <p className="section-note">
-            A preview of our future bestsellers collection. Curated demo picks,
-            not a sales ranking.
+            {demo
+              ? "A preview of our future bestsellers collection. Curated demo picks, not a sales ranking."
+              : "A considered edit of featured objects from our studio."}
           </p>
+          {products.length === 0 && (
+            <p className="section-note">
+              Our catalogue is taking shape. Check back for new objects, or
+              contact us about your idea.
+            </p>
+          )}
           <div className="product-grid">
             {products
-              .filter((product) => product.featured)
+              .filter((product) => product.featured || product.bestseller)
               .map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -194,8 +210,9 @@ export default async function HomePage() {
       <div className="demo-banner shell">
         <Icon name="spark" />
         <p>
-          You’re exploring our first chapter. Products, prices and AI-generated
-          imagery are illustrative. Live orders aren’t open yet.
+          {demo
+            ? "You’re exploring our first chapter. Products, prices and AI-generated imagery are illustrative. Live orders aren’t open yet."
+            : "Explore our catalogue and discuss your ideas with us. Editorial imagery is illustrative. Online orders and payments aren’t open yet."}
         </p>
         <Link href="/contact">
           Let’s talk <Icon name="arrow" size={16} />
