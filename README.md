@@ -1,90 +1,134 @@
 # San3D
 
-Foundation for a premium 3D printing e-commerce application, built with Next.js App Router, React, TypeScript, Tailwind CSS, and ESLint.
-
-## Project status
-
-Initialized application with a minimal holding page, shared layout, site configuration, and preliminary product, cart, and order domain types. Supabase, Razorpay, and admin integration boundaries are documented but not implemented. There is no working catalog, checkout, database, or admin dashboard yet.
+A design-led storefront for a 3D printing business. Built with Next.js App Router, React, TypeScript, and Tailwind CSS, with a warm ivory and charcoal visual identity, original concept imagery, and a working browser-local shopping bag.
 
 Repository: [sanskarcodespace/San3D](https://github.com/sanskarcodespace/San3D).
 
-## Local development
+## Current status
 
-Use Node.js 24 LTS (see `.nvmrc`) and npm. Next.js requires Node.js 20.9 or later.
+Phase 2 is a **demo storefront**, not a live shop. All seven products, prices, finish options, dimensions, and AI-generated images are illustrative. There are no invented reviews, sales rankings, stock counts, delivery guarantees, live payments, or order submission endpoints.
+
+The homepage includes a clearly labelled preview of a future bestsellers collection. Supabase, Razorpay, and the no-code admin dashboard remain future integrations. Public contact links use the owner's confirmed WhatsApp number and email address.
+
+## Run locally
+
+Use Node.js 24 LTS (`.nvmrc`) and npm. The initial implementation was also verified using the workstation's Node.js 26 runtime.
 
 ```bash
 nvm use
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). Environment configuration is optional for this initial application; leave placeholders blank until integrations are implemented. Never commit real credentials.
+Open [localhost:3000](http://localhost:3000). No credentials are required for the demo; leave integration settings blank.
 
-## Commands
+| Command             | Purpose                                                  |
+| ------------------- | -------------------------------------------------------- |
+| `npm run dev`       | Start development server                                 |
+| `npm run lint`      | ESLint, zero warnings allowed                            |
+| `npm run typecheck` | Check TypeScript                                         |
+| `npm run build`     | Generate production application                          |
+| `npm start`         | Serve production build                                   |
+| `npm test`          | Run Playwright regression tests against production build |
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run lint` | Run ESLint with zero warnings allowed |
-| `npm run typecheck` | Check TypeScript without emitting JavaScript |
-| `npm run build` | Create and type-check the production build |
-| `npm start` | Serve an existing production build |
-| `npm ci` | Install reproducibly from the committed lockfile |
+Install the test browser once before the first test run:
 
-## Structure
+```bash
+npx playwright install chromium
+npm run build
+npm test
+```
+
+Tests start and stop their own server on port 3100; leave that port available. They cover catalogue filters/search/sorting, gallery selection, variants and prices, personalisation validation, cart quantity/removal/persistence, blocked storage, mobile navigation, page metadata, internal links, assets, 404s, and overflow at 320, 390, 768, and 1440 pixels. Pure cart tests exercise malformed storage, invalid IDs, quantity bounds, merging, and authoritative demo pricing. Browser coverage currently uses Chromium; Safari and Firefox are not covered.
+
+## Pages
+
+| Route               | Experience                                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `/`                 | Editorial hero, collections, favourites preview, featured objects, gifting and brand story               |
+| `/shop`             | Searchable catalogue, category filters, price/name sorting and empty state                               |
+| `/category/[slug]`  | Seven category landing pages                                                                             |
+| `/products/[slug]`  | Seven product pages with full/detail gallery views, finishes, quantity, optional text and design details |
+| `/custom-gifts`     | Personalised gift collection and enquiry journey                                                         |
+| `/cart`             | Persistent demo selections, subtotal and WhatsApp enquiry draft                                          |
+| `/about`            | Brand story and design principles                                                                        |
+| `/contact`          | WhatsApp, email and common questions                                                                     |
+| `/shipping-returns` | Honest pre-launch shipping and returns information                                                       |
+
+The WhatsApp links open a message draft; they do not send it automatically. The cart never reserves inventory or creates an order. Browser storage may be cleared by the visitor; when storage is blocked, the bag works in memory for the current session. Quantity is capped at 20 per unique product/finish/personalisation selection as a demo UI bound, not an inventory statement.
+
+## Project structure
 
 ```text
 src/
   app/
-    (storefront)/page.tsx  # Public route composition; resolves to /
-    globals.css           # Tailwind and global theme
-    layout.tsx            # Root document and metadata
-  components/
-    layout/               # Shared layout primitives
-  config/                 # Public site configuration
+    (storefront)/
+      layout.tsx            # Shared header, footer and cart provider
+      page.tsx              # Homepage
+      shop/                 # Catalogue
+      category/[slug]/      # Category landing pages
+      products/[slug]/      # Product detail pages
+      custom-gifts/
+      cart/
+      about/
+      contact/
+      shipping-returns/
+    globals.css             # Design tokens and responsive styling
+    layout.tsx              # Document metadata and skip link
+    not-found.tsx
+    icon.svg
+  components/storefront/    # Reusable navigation, cards, catalogue, detail and cart UI
+  config/site.ts            # Brand and confirmed contact details
   features/
-    admin/                # Future administration boundary
-    cart/                 # Cart domain contracts
-    orders/               # Order and payment domain contracts
-    products/             # Catalog and variant domain contracts
+    products/
+      data/demo-catalog.ts  # The only product/category demo data source
+      repository.ts         # Async data adapter boundary
+      types.ts              # Storefront read model
+    cart/                   # Storage validation, totals, state provider and types
+    orders/                 # Future order domain contracts
+    admin/                  # Future administration boundary
   lib/
-    razorpay/             # Future payment adapter boundary
-    supabase/             # Future database/auth adapter boundary
-public/                   # Static assets
-.env.example              # Sanitized configuration template
+    format.ts               # INR display formatting
+    supabase/               # Future integration guidance
+    razorpay/               # Future integration guidance
+public/images/              # Six original concept images, served through next/image
+tests/                     # Cart and storefront regression tests
+docs/                      # Architecture and image generation provenance
 ```
 
-## Architecture
+`@/*` resolves to `src/*`. Routes load products through the repository module, and interactive components receive typed serializable data. Credentials never reach client components. Generated `AGENTS.md` records the installed Next.js version's agent guidance.
 
-Keep routes thin: use `app` for layouts and route composition, `features` for domain-specific types and business logic, `components` for reusable presentation, and `lib` for external service adapters. Prefer Server Components; introduce Client Components only where browser state or interaction is needed. The `@/*` alias resolves to `src/*`.
+## Future data and admin integration
 
-Product variants represent SKU, material, color, price, and inventory. Order items preserve a purchase snapshot. Money is represented in integer paise for INR. These are initial TypeScript contracts, not runtime validation or a finalized database schema.
+See [architecture.md](docs/architecture.md) for the product read model, Supabase migration path, admin capabilities, cart boundaries, and payment prerequisites. No database SDK or privileged service is required by this phase.
 
-Add storefront catalog and product routes inside `(storefront)` as features are developed. Introduce the dashboard under `(admin)/admin` with server-side authentication and authorization, and payment/webhook handlers under `app/api` when their implementation is ready. Route groups organize code without adding URL segments or providing access control.
+The future admin dashboard should manage products, categories, variants, media, and publication status without changing page code. Database rows must be mapped into the storefront contract inside `repository.ts`. Customer-facing prices and availability must be revalidated on the server before any real order is accepted.
 
-## Integration plan
+## Design, images and accessibility
 
-**Supabase:** Add browser and request-scoped server clients, database migrations, generated schema types, storage policies, and row-level security. See `src/lib/supabase/README.md`. Apply server-enforced roles before building administrative data access.
+Reusable components use semantic navigation, headings and forms, visible focus styles, a skip link, labelled controls, keyboard-operable finish choices, an Escape-dismissable mobile menu, status messages, and reduced-motion support. Product thumbnails offer a full view and an explicitly labelled texture crop of the same concept visual. Finishes and custom text do not alter the image; this is stated on the product page.
 
-**Razorpay:** Add server-side order creation, signature verification, webhook handling, and idempotent payment reconciliation. See `src/lib/razorpay/README.md`. Recalculate checkout prices on the server and validate inventory before accepting an order.
+Generated images are committed locally, with source prompts and provenance in [imagery.md](docs/imagery.md). The built-in imagegen tool created all six images; none depicts verified inventory. Replace these assets with approved real product photography before launch. Next.js serves responsive, optimized images without third-party image-host dependencies. Typography uses system fonts, so builds do not need a font service.
 
-**Product management and admin:** Build catalog CRUD, variant inventory, media management, and order fulfillment within the corresponding feature modules. See `src/features/admin/README.md`. Add behavioral tests alongside real business logic and integration tests as services are connected.
+## SEO and launch state
 
-## Environment and secrets
+Every public route has a descriptive title, description, readable URL and a single main heading. Unknown products/categories return 404. The preview intentionally uses `noindex, follow` to keep illustrative products and prices out of search results. Before a real launch, approve catalogue content, set the final domain and canonical URLs, add a sitemap, and enable indexing. There is no fabricated product availability, review, or offer schema.
 
-`.env.example` lists future Supabase and Razorpay settings. Only `NEXT_PUBLIC_*` values may reach the browser; never prefix a secret with `NEXT_PUBLIC_`. Load server credentials only within server modules when the integrations are added, and validate required settings at their entry points.
+## Environment and security
 
-Git ignores `.env.local`, other environment files, `node_modules`, build artifacts, common credential files, and local logs. The sanitized `.env.example` is explicitly tracked. Git cannot detect arbitrary secrets embedded in source files: keep credentials out of code and use environment settings in deployment.
+`.env.example` contains sanitized placeholders for future Supabase and Razorpay integrations. `.env.local`, all other environment files, dependency folders, build output, common credential files, and test artifacts are ignored. Public WhatsApp and email details live in `src/config/site.ts` and are intended for publication.
 
-## Verification and deployment
+Never put secrets in `NEXT_PUBLIC_*` variables or source code. Add runtime validation, server-only adapters, authentication, row-level security and role checks when services are introduced.
 
-Before committing changes, run `npm run lint`, `npm run build`, and `npm run typecheck`. A build needs no service keys at this stage. The app can run on a Node.js host supporting Next.js with `npm run build` followed by `npm start`; configure service environments when those features are implemented.
+## Known tooling limitations
 
-No deployment or automatic push workflow is configured. The initial commit is local; pushing to GitHub is a separate approved step.
+The full npm audit has five high-severity findings in the development lint dependency chain: `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`. At verification time no patched `braces` release was available; the suggested automatic remedy downgraded the Next.js lint config to version 14. Do not apply that incompatible downgrade blindly. Production-only audit reports zero vulnerabilities.
 
-## Current tooling limitations
+ESLint 9 remains compatible with the React, accessibility, and import plugins but is marked unsupported by npm. Revisit the lint stack together when compatible updates are available.
 
-At initialization, `npm audit --omit=dev` reports no production vulnerabilities. The full audit reports five high-severity findings along the development-only lint dependency chain (`eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`). The available `braces` release is affected, and npm's proposed automatic fix downgrades the Next.js ESLint configuration to version 14; do not apply that incompatible downgrade blindly. Revisit this chain when an upstream fix is released.
+## Repository handling
 
-ESLint 9 is retained for compatibility with the React, accessibility, and import lint plugins, although npm marks that ESLint release unsupported. TypeScript 5.9 is pinned within its minor line for tooling compatibility. Upgrade these together after verifying the plugins' supported versions.
+The nested `San3D/` folder is a separate, empty Git initialization pointing to the same GitHub repository. It contains `.git/` and `.kilo/` tooling metadata, no commits and no application files. It has been left untouched and excluded from this work's commit. No files were deleted or moved there.
+
+The Phase 2 commit is local. Pushing or deploying is a separate approved action.

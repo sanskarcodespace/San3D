@@ -1,22 +1,31 @@
-/** Initial domain contracts; refine alongside the future database schema. */
-export type ProductStatus = "draft" | "active" | "archived";
-
+export interface Category {
+  slug: string;
+  name: string;
+  shortName: string;
+  description: string;
+  image: string;
+}
 export interface ProductVariant {
   id: string;
-  sku: string;
-  material: string;
+  name: string;
   color: string;
-  /** Integer paise. Calculate authoritative prices on the server. */
   priceInPaise: number;
-  stockQuantity: number;
 }
-
+/** Storefront read model. Map database rows to this contract in the repository. */
 export interface Product {
   id: string;
   slug: string;
   name: string;
+  subtitle: string;
   description: string;
-  status: ProductStatus;
-  imageUrls: string[];
+  category: string;
+  image: string;
+  imageAlt: string;
+  material: string;
+  dimensions: string;
   variants: ProductVariant[];
+  personalizable?: boolean;
+  featured?: boolean;
+  badge?: string;
+  isDemo: true;
 }

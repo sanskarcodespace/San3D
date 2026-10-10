@@ -1,5 +1,6 @@
-/** Client-side intent only; revalidate stock and price during checkout. */
 export interface CartItem {
+  productId: string;
   variantId: string;
   quantity: number;
+  personalisation: string;
 }

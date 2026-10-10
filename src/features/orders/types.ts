@@ -1,5 +1,6 @@
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
-export type FulfillmentStatus = "unfulfilled" | "printing" | "shipped" | "delivered" | "cancelled";
+export type FulfillmentStatus =
+  "unfulfilled" | "printing" | "shipped" | "delivered" | "cancelled";
 
 /** Immutable purchase snapshot, independent of later catalog edits. */
 export interface OrderItem {
