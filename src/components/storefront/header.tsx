@@ -10,7 +10,7 @@ const links = [
   ["/custom-gifts", "Custom gifts"],
   ["/about", "Our story"],
 ];
-export function Header() {
+export function Header({ demo = false }: { demo?: boolean }) {
   const pathname = usePathname();
   const { count } = useCart();
   const [open, setOpen] = useState(false);
@@ -20,7 +20,8 @@ export function Header() {
       <div className="announcement">
         A little imagination. A whole new dimension.{" "}
         <Link href="/shop" onClick={() => setOpen(false)}>
-          Explore our demo collection <span aria-hidden="true">↗</span>
+          Explore our {demo ? "demo collection" : "collection"}{" "}
+          <span aria-hidden="true">↗</span>
         </Link>
       </div>
       <header

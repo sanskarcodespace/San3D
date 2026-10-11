@@ -54,7 +54,7 @@ export default function AboutPage() {
           <p>
             Our aim is simple: considered forms, expressive details, and an open
             conversation about what’s possible. The products you see here are
-            demo concepts. We’re still shaping the real collection.
+            editorial concepts. Product listings show the current catalogue.
           </p>
         </div>
       </section>

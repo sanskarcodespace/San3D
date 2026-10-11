@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { siteConfig, whatsappUrl } from "@/config/site";
 import { Icon } from "./icon";
-export function Footer() {
+export function Footer({
+  demo = false,
+  corporateCategory = false,
+}: {
+  demo?: boolean;
+  corporateCategory?: boolean;
+}) {
   return (
     <footer className="site-footer">
       <div className="shell">
@@ -21,7 +27,11 @@ export function Footer() {
             <h2>Explore</h2>
             <Link href="/shop">Shop all</Link>
             <Link href="/custom-gifts">Custom gifts</Link>
-            <Link href="/category/corporate-bulk">Corporate & bulk</Link>
+            <Link
+              href={corporateCategory ? "/category/corporate-bulk" : "/contact"}
+            >
+              Corporate & bulk
+            </Link>
             <Link href="/about">Our story</Link>
           </div>
           <div>
@@ -50,7 +60,11 @@ export function Footer() {
             © {new Date().getFullYear()} {siteConfig.name}. A world of
             possibilities.
           </span>
-          <span>Demo catalogue · Concept imagery · Payments unavailable</span>
+          <span>
+            {demo
+              ? "Demo catalogue · Concept imagery · Payments unavailable"
+              : "San3D catalogue · Online payments unavailable"}
+          </span>
           <span>INR ₹ / India</span>
         </div>
       </div>

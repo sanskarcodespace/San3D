@@ -3,7 +3,7 @@ import { CartView } from "@/components/storefront/cart-view";
 export const metadata: Metadata = {
   title: "Your Bag",
   description:
-    "Review your San3D demo selections, finishes and personalisation. No payments or orders are processed.",
+    "Review your San3D selections, finishes and personalisation. No payments or orders are processed.",
 };
 export default function CartPage() {
   return (

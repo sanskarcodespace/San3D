@@ -7,7 +7,7 @@ import { getProducts, getCategories } from "@/features/products/repository";
 export const metadata: Metadata = {
   title: "Custom 3D Gifts",
   description:
-    "Explore personalised 3D gift concepts, name keychains and lithophane lamps. Discuss an idea with San3D.",
+    "Explore personalised 3D gifts, name keychains and lithophane lamps. Discuss an idea with San3D.",
 };
 export default async function GiftsPage() {
   return (
@@ -47,7 +47,10 @@ export default async function GiftsPage() {
         <div>
           <span>02 / MAKE IT PERSONAL</span>
           <h2>Add your own detail.</h2>
-          <p>Explore a concept finish and save your text in the demo bag.</p>
+          <p>
+            Explore the options and save your personalisation request in your
+            bag.
+          </p>
         </div>
         <div>
           <span>03 / LET’S TALK</span>

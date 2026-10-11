@@ -14,8 +14,8 @@ export default function ShippingPage() {
         <p>Shipping & returns information</p>
       </header>
       <div className="policy-notice">
-        We’re preparing for launch. This website currently showcases demo
-        products and does not accept orders or payments.
+        We’re preparing for launch. Explore our catalogue and contact us with
+        questions. Online orders and payments are not available yet.
       </div>
       <section>
         <h2>Shipping & delivery</h2>
@@ -31,7 +31,7 @@ export default function ShippingPage() {
         <p>
           A final returns, cancellation, damage-reporting, and refund policy
           will be published before online sales begin. No return window or
-          eligibility promise is made by this demo storefront.
+          eligibility promise is made by this storefront.
         </p>
       </section>
       <section>
@@ -43,7 +43,7 @@ export default function ShippingPage() {
         </p>
       </section>
       <section>
-        <h2>Your demo bag</h2>
+        <h2>Your bag</h2>
         <p>
           Your selections are stored in your browser. Adding an item does not
           reserve inventory, create an order, or trigger a charge. You can

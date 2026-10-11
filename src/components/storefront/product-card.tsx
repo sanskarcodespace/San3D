@@ -45,12 +45,20 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div
         className="card-swatches"
-        aria-label={`${product.variants.length} concept finishes`}
+        aria-label={`${product.variants.length} ${product.isDemo ? "concept " : ""}finishes`}
       >
         {product.variants.map((variant) => (
           <span key={variant.id} style={{ background: variant.color }} />
         ))}
-        <small>Demo price</small>
+        <small>
+          {product.isDemo
+            ? "Demo price"
+            : product.variants.every(
+                  (v) => v.availability === "stocked" && !v.quantity,
+                )
+              ? "Currently unavailable"
+              : "View options"}
+        </small>
       </div>
     </article>
   );

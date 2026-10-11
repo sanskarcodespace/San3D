@@ -1,14 +1,7 @@
-# Supabase integration boundary
+# Supabase boundary
 
-Reserved for future database, storage, and authentication adapters. No SDK, network requests, migrations, or credentials are configured yet.
+`server.ts` imports `server-only`. Session clients are request-scoped, use cookie-based `@supabase/ssr` authentication and the publishable key, and must be paired with `requireAdmin()` for protected operations. The public client has no session and performs uncached published-catalogue reads under anonymous RLS.
 
-When implementing:
+The admin proxy refreshes cookies. Never trust an unverified `getSession()` result as authorisation, cache authenticated responses, expose service-role keys or bypass RLS for routine catalogue edits. `@supabase/server` is installed as requested; the Next.js implementation uses `@supabase/ssr` and `supabase-js`.
 
-- Install `@supabase/supabase-js` and `@supabase/ssr`.
-- Separate browser and server clients; use request-scoped cookies for server authentication.
-- Use the publishable key with row-level security for ordinary access.
-- Isolate any privileged client in a module importing `server-only`; never expose the service role key to client components.
-- Keep migrations and policies in a root `supabase/` directory and generate database types from the actual schema.
-- Map database rows to feature domain types instead of coupling presentation components to database queries.
-
-Environment placeholders are documented in the root `.env.example`.
+Migrations live in `supabase/migrations/`. See `docs/supabase-setup.md` for applying them and granting the first administrator by Auth UUID. Future personal photos must stay in the private bucket.

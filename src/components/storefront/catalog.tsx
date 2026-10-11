@@ -19,7 +19,7 @@ export function Catalog({
     const filtered = products.filter(
       (product) =>
         (category === "all" || product.category === category) &&
-        `${product.name} ${product.description}`
+        `${product.name} ${product.description} ${(product.tags ?? []).join(" ")}`
           .toLowerCase()
           .includes(query.toLowerCase().trim()),
     );
@@ -85,7 +85,11 @@ export function Catalog({
       )}
       <div className="catalog-count" aria-live="polite">
         {results.length} {results.length === 1 ? "object" : "objects"}
-        <span>Concept products · Illustrative prices</span>
+        <span>
+          {products.some((p) => p.isDemo)
+            ? "Concept products · Illustrative prices"
+            : "Thoughtfully made, layer by layer"}
+        </span>
       </div>
       {results.length ? (
         <div className="product-grid">

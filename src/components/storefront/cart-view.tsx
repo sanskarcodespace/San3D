@@ -19,7 +19,8 @@ export function CartView() {
         </Link>
       </div>
     );
-  const inquiry = `Hi San3D! I'd like to discuss these demo selections (not place an order):\n${items
+  const demo = products.some((p) => p.isDemo);
+  const inquiry = `Hi San3D! I'd like to discuss these ${demo ? "demo " : ""}selections (not place an order):\n${items
     .map((item) => {
       const p = products.find((p) => p.id === item.productId)!;
       const v = p.variants.find((v) => v.id === item.variantId)!;
@@ -30,7 +31,8 @@ export function CartView() {
     <div className="cart-layout">
       <div>
         <p className="catalog-count" aria-live="polite">
-          {count} {count === 1 ? "item" : "items"} in your demo bag
+          {count} {count === 1 ? "item" : "items"} in your{" "}
+          {demo ? "demo bag" : "bag"}
         </p>
         {items.map((item) => {
           const product = products.find(
@@ -71,7 +73,12 @@ export function CartView() {
                       {item.quantity}
                     </output>
                     <button
-                      disabled={item.quantity >= 20}
+                      disabled={
+                        item.quantity >=
+                        (variant.availability === "stocked"
+                          ? Math.min(20, variant.quantity ?? 0)
+                          : 20)
+                      }
                       aria-label={`Increase ${product.name} quantity`}
                       onClick={() => update(key, item.quantity + 1)}
                     >
@@ -101,12 +108,12 @@ export function CartView() {
         <p className="eyebrow">YOUR SELECTION</p>
         <h2>A little more you.</h2>
         <div className="summary-row">
-          <span>Demo subtotal</span>
+          <span>{demo ? "Demo subtotal" : "Subtotal"}</span>
           <strong>{formatPrice(total)}</strong>
         </div>
         <p>
-          Illustrative prices only. Shipping and any applicable taxes have not
-          been calculated.
+          {demo ? "Illustrative prices only. " : ""}Shipping and any applicable
+          taxes have not been calculated.
         </p>
         <div className="demo-note">
           <Icon name="spark" />

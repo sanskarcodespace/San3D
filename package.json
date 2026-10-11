@@ -8,17 +8,25 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:db": "node --test tests/database/*.test.mjs"
   },
   "engines": {
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@supabase/server": "^1.9.1",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^24.19.2",

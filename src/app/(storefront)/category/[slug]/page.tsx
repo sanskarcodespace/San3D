@@ -8,11 +8,9 @@ import {
   getCategory,
 } from "@/features/products/repository";
 type Props = { params: Promise<{ slug: string }> };
-export async function generateStaticParams() {
-  return (await getCategories()).map(({ slug }) => ({ slug }));
-}
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await getCategory((await params).slug);
+  if (!category) notFound();
   return {
     title: category?.name ?? "Collection not found",
     description: category?.description,

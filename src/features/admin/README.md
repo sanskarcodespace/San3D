@@ -1,5 +1,7 @@
-# Admin feature boundary
+# Catalogue administration
 
-Place product, inventory, order, and fulfillment management logic here. Keep route composition in `src/app/(admin)/admin` when implementation begins.
+`auth.ts` verifies Supabase users and current roles. `repository.ts` protects every admin read. `actions.ts` validates all product/category mutations, invokes the transactional product RPC and invalidates public routes. `schema.ts` is the shared validation contract. `image-validation.ts` decodes and normalises uploaded image bytes; the API route separately checks authentication and Origin.
 
-No admin route or authentication is implemented yet. Before exposing any dashboard, verify the authenticated user's role on the server for every read and mutation, and enforce corresponding database policies. A hidden navigation item or route group is not authorization.
+`components/` contains product/category editors, login, private preview, list operations and media management. Routes live in `app/admin`; the protected route group is additional defence, never the sole authorisation check.
+
+See `docs/admin-guide.md`, `docs/supabase-setup.md` and `supabase/migrations/`. No credentials or administrator emails belong in source code.

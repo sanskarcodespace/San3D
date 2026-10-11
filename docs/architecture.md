@@ -1,42 +1,54 @@
-# Storefront architecture
+# San3D architecture
 
-## Responsibility boundaries
+## Request and data boundaries
 
-- `app/(storefront)` composes pages and provides route-level metadata. Product and category routes are generated from the data adapter.
-- `components/storefront` contains reusable display and interaction components. Server-side cards and footer do not need client JavaScript; the header, catalogue, product controls and cart opt in to client rendering.
-- `features/products/repository.ts` is the replaceable async data source. Only its implementation imports the demo catalogue in application code.
-- `features/products/types.ts` defines the stable read model used by cards, product pages and the cart.
-- `features/cart/model.ts` validates persisted selections and computes illustrative totals from trusted catalogue data. The browser cannot override a price through local storage.
-- `CartProvider` synchronizes a versioned localStorage key through storage events and same-tab notifications. Server snapshots are empty to avoid hydration mismatches. Blocked storage falls back to in-memory state.
-- `lib/supabase` and `lib/razorpay` remain documented boundaries. They do not make network calls in Phase 2.
+`app/(storefront)` composes the established premium UI. Its server-only product repository maps published PostgreSQL rows into the existing `Product` and `Category` contracts. Additional optional fields cover galleries, SEO, tags, availability, discounts and personalisation limits. Cart selections retain stable product/variant IDs and integer-paise prices.
 
-## Product management and a future no-code admin
+Storefront routes are dynamically rendered. Public Supabase requests use `cache: no-store`; React `cache` deduplicates reads within a render. Admin actions invalidate the root layout after changes. New slugs and publication changes are therefore visible on subsequent requests without redeployment, including changes made outside the app. Existing open browser tabs refresh on navigation/reload. Missing product/category URLs resolve before streaming and return 404.
 
-Suggested persistent entities:
+`SAN3D_CATALOGUE_SOURCE=demo` explicitly selects the isolated development catalogue. Production-mode local tests also require `SAN3D_ALLOW_DEMO_PREVIEW=true`. There is no automatic fallback on database failure. Do not enable demo mode on hosting.
 
-| Entity               | Fields / relationship                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Category             | Stable ID, unique slug, name, short heading, description, image reference, sort order                                            |
-| Product              | Stable ID, unique slug, category relation, title, subtitle, description, material, dimensions, publication status, feature flags |
-| Variant              | Stable ID, product relation, SKU, name, colour value, integer price in paise, inventory policy                                   |
-| Product media        | Product relation, storage object path, alt text, display order, concept/approved flag                                            |
-| Personalisation rule | Product relation, input label, maximum length, validation and design approval requirements                                       |
+## Authentication and authorisation
 
-An admin interface should allow editors to create drafts, upload approved images, edit variants, select featured objects and publish content. Keep schemas, runtime validation and server-side access checks shared by all write paths. Role checks and Supabase row-level security are required; hidden navigation is not access control. Use unique slug constraints, immutable product/variant IDs, audit trails and cache invalidation on publication.
+`lib/supabase/server.ts` creates request-scoped Supabase SSR clients. The admin proxy refreshes cookies, but does not serve as the only access check. Every data read, Server Action and image route verifies `auth.getUser()` and the database's `is_catalogue_admin()` function. Roles are UUID-based rows managed only by the database owner. Clients cannot self-promote through profile metadata.
 
-Map those entities to `Product` and `Category` in the repository. Replace the current demo-only marker and visible demo wording only after real data is approved. Expand image lists and per-variant images together rather than pretending the current concept photograph shows every finish. Use pagination/server-side search when a real catalogue grows beyond the small demo set. A larger catalogue should resolve only cart-selected products rather than passing the entire catalogue to the root provider.
+Cookies are HTTP-only, SameSite=Lax, Secure on production HTTPS. The app uses no browser auth client and no service-role credentials. Supabase's hosted authentication handles password verification and auth rate limiting. Next Server Actions and explicit image-route Origin checks protect mutation boundaries. Admin routes are dynamic and use private, no-store headers. Revocation takes effect on the next protected operation.
 
-## Real ordering prerequisites
+## PostgreSQL model
 
-1. Implement authentication and an authoritative server-side checkout boundary.
-2. Revalidate product publication, chosen variant, personalisation, quantity, inventory and price on every order request.
-3. Compute shipping, taxes and totals server-side; persist immutable order snapshots.
-4. Add Razorpay order creation and signature verification in server-only modules, with idempotent webhook processing.
-5. Publish approved shipping, return, cancellation and privacy information before accepting orders.
-6. Add integration tests for duplicate payments, failures, retries, refunds and inventory changes.
+| Table                        | Purpose and access                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| products                     | Product content, category, SEO, publication and merchandising flags; published reads public |
+| categories, tags             | Public discovery metadata; writes admin-only                                                |
+| product_images, product_tags | Ordered alt-tagged assets and tag relations; public only for published parents              |
+| variants                     | Stable IDs, SKU, colour/size/material and integer-paise prices; published parents public    |
+| inventory                    | Stock/made-to-order settings; direct access admin-only                                      |
+| product_production           | Filament weight, print time and material/labour costs; admin-only                           |
+| admin_roles                  | Owner-granted UUID membership; users may only read their own role                           |
+| audit_logs                   | Trigger-written old/new records; admin reads, no client writes                              |
 
-The current cart is neither a checkout nor an order record. A WhatsApp draft can include demo selections, but sending it is the visitor's action and does not imply acceptance of an order.
+`catalogue_availability()` exposes only published variant ID, mode and quantity. Private fields are separated into tables; RLS is not relied upon to hide columns. Functions that need owner privileges have fixed empty search paths, qualified object names and restricted execution grants. The atomic save RPC is security-invoker and enforces admin membership plus RLS.
 
-## Quality checks
+`save_catalogue_product` locks the current product row and compares its version before replacing child metadata in one transaction. Stable variant IDs preserve valid cart selections. Deferred publication checks validate the final state, so failed images/variants/stock cannot leave half-saved published content. Child identity/parent changes are prohibited. Database constraints enforce unique slugs/SKUs, integer prices and bounds. Audit triggers cover mutations and role changes.
 
-Run lint and build before browser tests. Playwright starts the production server on port 3100. Tests verify all 21 public pages, internal URLs, image responses and missing-resource 404s, alongside the key interactions and responsive widths. Screenshot artifacts are ignored by Git. Manual browser review complements these tests; automated overflow checks alone do not establish visual quality or full accessibility conformance.
+## Images
+
+The upload endpoint authenticates before reading multipart files, enforces 5 MiB and 25-million-pixel limits, checks declared MIME against decoded JPEG/PNG/WebP format, rejects animation and re-encodes to WebP. Generated UUID paths prevent traversal and overwrite. Buckets independently restrict size and MIME. No untrusted HTML or SVG uploads are accepted.
+
+`catalogue-images` is public, including draft assets. It must not contain private customer photos. Metadata saves happen before unused object cleanup; policies protect files referenced by products or categories, including duplicated products. Failed/abandoned uploads can be removed in the media library. `customer-photos` is private with no application access policy or endpoint.
+
+## Admin interface
+
+Server-loaded pages use shared role checks; client editors hold unsaved form state. Zod schemas validate unknown mutation payloads server-side, with database validation as a second layer. Product preview is an unsaved, private editorial preview. Publishing/unpublishing changes the public catalogue; archive/delete operations require confirmation. Duplicate creates a draft with fresh variant IDs/SKUs and zero stock.
+
+Categories currently use last-write-wins editing. The UI supports up to 30 product images, 100 variants and 30 tags; database queries paginate when listing records. No bulk imports, order management, customer management or payment operations are included.
+
+## Cart and future checkout
+
+The browser-local bag validates persisted input, looks up authoritative catalogue prices and drops obsolete selections. Inventory limits improve the selection experience but are not stock reservations. Customer personalisation is plain text, bounded by product rules. Image variants are selected as options; gallery images are not simulated personalised renderings.
+
+Future checkout must validate publication, price, personalisation and aggregate stock server-side; reserve/decrement inventory transactionally; calculate shipping and tax; persist immutable order snapshots; create Razorpay orders and verify signatures with idempotent webhooks. Publish approved trading policies before enabling sales. No payment buttons or order endpoints pretend these operations exist now.
+
+## Verification boundaries
+
+PGlite tests execute both migrations and actual PostgreSQL constraints, transactions and role/RLS semantics using fixture `auth.uid()` and Storage system tables. Playwright checks the existing demo-mode storefront, cart compatibility, anonymous admin denial and image endpoint origin/auth denial. Separate validation tests exercise pricing, publication and decoded image rules. Both migrations and the application administrator are configured. Hosted fresh login/logout, product creation/editing/duplication/publication/archiving, image uploads/replacement/deletion and category imagery have been checked through the UI. Dashboard and editor layouts were checked at 390px, 768px and 1440px. Hosted ordinary-user sign-in and role revocation were not exercised; their authorization semantics are covered by PostgreSQL tests. See `docs/phase-3-verification.md`.

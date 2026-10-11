@@ -1,134 +1,101 @@
 # San3D
 
-A design-led storefront for a 3D printing business. Built with Next.js App Router, React, TypeScript, and Tailwind CSS, with a warm ivory and charcoal visual identity, original concept imagery, and a working browser-local shopping bag.
+A premium 3D-printing catalogue and administrator studio built with Next.js App Router, React, TypeScript, Tailwind CSS and Supabase. The storefront retains its ivory, charcoal and muted green identity while catalogue content is managed through forms.
 
 Repository: [sanskarcodespace/San3D](https://github.com/sanskarcodespace/San3D).
 
 ## Current status
 
-Phase 2 is a **demo storefront**, not a live shop. All seven products, prices, finish options, dimensions, and AI-generated images are illustrative. There are no invented reviews, sales rankings, stock counts, delivery guarantees, live payments, or order submission endpoints.
+Phase 3 implementation adds Supabase PostgreSQL, cookie-based authentication, protected catalogue administration and Storage image management. Both migrations and the first application administrator role are verified on the hosted project. Signed-in category creation and imagery, product creation/editing/duplication, multiple image uploads/replacement/deletion, preview, publication, archiving and fresh login/logout have passed browser verification. See [setup instructions](docs/supabase-setup.md).
 
-The homepage includes a clearly labelled preview of a future bestsellers collection. Supabase, Razorpay, and the no-code admin dashboard remain future integrations. Public contact links use the owner's confirmed WhatsApp number and email address.
+The catalogue defaults to live Supabase data. An empty database shows an empty collection; it does not silently substitute demo products. There are no live payments, order creation, fake reviews or automatic stock reservations. Editorial concept imagery is labelled as illustrative. Contact links use the owner's confirmed WhatsApp number and email address.
 
-## Run locally
+## Local setup
 
-Use Node.js 24 LTS (`.nvmrc`) and npm. The initial implementation was also verified using the workstation's Node.js 26 runtime.
+Use Node.js 24 LTS (`.nvmrc`) and npm. Development was also checked with the workstation's Node.js 26 runtime.
 
 ```bash
 nvm use
 npm ci
+# Only if .env.local does not already exist:
 cp .env.example .env.local
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). No credentials are required for the demo; leave integration settings blank.
+Enter your Supabase URL and publishable key in `.env.local`, then apply the two versioned migrations in order and create your administrator membership. Do not overwrite an existing `.env.local`. No service-role key is required. The file and `node_modules` are ignored by Git.
 
-| Command             | Purpose                                                  |
-| ------------------- | -------------------------------------------------------- |
-| `npm run dev`       | Start development server                                 |
-| `npm run lint`      | ESLint, zero warnings allowed                            |
-| `npm run typecheck` | Check TypeScript                                         |
-| `npm run build`     | Generate production application                          |
-| `npm start`         | Serve production build                                   |
-| `npm test`          | Run Playwright regression tests against production build |
+- Storefront: [localhost:3000](http://localhost:3000)
+- Studio: [localhost:3000/admin](http://localhost:3000/admin)
+- Login: [localhost:3000/admin/login](http://localhost:3000/admin/login)
 
-Install the test browser once before the first test run:
+For deliberate local demo development, set `SAN3D_CATALOGUE_SOURCE=demo`. Production-mode browser tests set `SAN3D_ALLOW_DEMO_PREVIEW=true` only for their isolated local server. Do not enable these demo settings on hosting. Live database failures show an error, never an invented catalogue.
 
-```bash
-npx playwright install chromium
-npm run build
-npm test
-```
+## Catalogue studio
 
-Tests start and stop their own server on port 3100; leave that port available. They cover catalogue filters/search/sorting, gallery selection, variants and prices, personalisation validation, cart quantity/removal/persistence, blocked storage, mobile navigation, page metadata, internal links, assets, 404s, and overflow at 320, 390, 768, and 1440 pixels. Pure cart tests exercise malformed storage, invalid IDs, quantity bounds, merging, and authoritative demo pricing. Browser coverage currently uses Chromium; Safari and Firefox are not covered.
+- Overview: published/draft/category counts, low-stock published products and recent audit activity.
+- Products: create, edit, search, duplicate, preview, publish, unpublish, archive and permanently delete with confirmation. Copies begin as drafts with stock reset to zero.
+- Product fields: SEO, category, tags, descriptions, dimensions, colour/size/material variants, integer-paise selling/compare-at prices, stock or made-to-order mode, personalisation limits, production lead days, featured and bestseller flags.
+- Private production planning: filament grams, print minutes and material/labour costs.
+- Categories: names, unique slugs, descriptions, image/alt text and display order.
+- Images: multiple uploads, alt text, reordering and replacement; an independent media library removes unused uploads. Shared images cannot be deleted while referenced.
 
-## Pages
+Read [the admin guide](docs/admin-guide.md) before publishing your first product. Prices and costs are entered as integer paise: ₹499 is `49900`. Publishing requires a category, detailed description, at least one image with alt text, and a valid variant with inventory settings.
 
-| Route               | Experience                                                                                               |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/`                 | Editorial hero, collections, favourites preview, featured objects, gifting and brand story               |
-| `/shop`             | Searchable catalogue, category filters, price/name sorting and empty state                               |
-| `/category/[slug]`  | Seven category landing pages                                                                             |
-| `/products/[slug]`  | Seven product pages with full/detail gallery views, finishes, quantity, optional text and design details |
-| `/custom-gifts`     | Personalised gift collection and enquiry journey                                                         |
-| `/cart`             | Persistent demo selections, subtotal and WhatsApp enquiry draft                                          |
-| `/about`            | Brand story and design principles                                                                        |
-| `/contact`          | WhatsApp, email and common questions                                                                     |
-| `/shipping-returns` | Honest pre-launch shipping and returns information                                                       |
+## Pages and architecture
 
-The WhatsApp links open a message draft; they do not send it automatically. The cart never reserves inventory or creates an order. Browser storage may be cleared by the visitor; when storage is blocked, the bag works in memory for the current session. Quantity is capped at 20 per unique product/finish/personalisation selection as a demo UI bound, not an inventory statement.
-
-## Project structure
+Public routes include `/`, `/shop`, `/category/[slug]`, `/products/[slug]`, `/custom-gifts`, `/cart`, `/about`, `/contact` and `/shipping-returns`. Products and categories resolve at request time; publishing does not require a commit or rebuild. Search includes names, descriptions and tags; filters and sorting preserve the existing storefront interactions.
 
 ```text
 src/
-  app/
-    (storefront)/
-      layout.tsx            # Shared header, footer and cart provider
-      page.tsx              # Homepage
-      shop/                 # Catalogue
-      category/[slug]/      # Category landing pages
-      products/[slug]/      # Product detail pages
-      custom-gifts/
-      cart/
-      about/
-      contact/
-      shipping-returns/
-    globals.css             # Design tokens and responsive styling
-    layout.tsx              # Document metadata and skip link
-    not-found.tsx
-    icon.svg
-  components/storefront/    # Reusable navigation, cards, catalogue, detail and cart UI
-  config/site.ts            # Brand and confirmed contact details
-  features/
-    products/
-      data/demo-catalog.ts  # The only product/category demo data source
-      repository.ts         # Async data adapter boundary
-      types.ts              # Storefront read model
-    cart/                   # Storage validation, totals, state provider and types
-    orders/                 # Future order domain contracts
-    admin/                  # Future administration boundary
-  lib/
-    format.ts               # INR display formatting
-    supabase/               # Future integration guidance
-    razorpay/               # Future integration guidance
-public/images/              # Six original concept images, served through next/image
-tests/                     # Cart and storefront regression tests
-docs/                      # Architecture and image generation provenance
+  app/(storefront)/          Public pages, metadata and shop loading state
+  app/admin/                Login, protected studio, responsive admin styling
+  app/api/admin/images/     Authenticated image upload/deletion endpoints
+  components/storefront/    Existing premium presentation components
+  features/admin/           Role checks, actions, validation, editors and data access
+  features/products/        Supabase repository and stable storefront types
+    data/demo-catalog.ts    Explicit development fallback only
+  features/cart/            Browser-local selections and catalogue-based pricing
+  lib/supabase/server.ts    Request-scoped session and public read clients
+  proxy.ts                  Admin session refresh and no-store response headers
+supabase/migrations/        Schema/RLS/storage and transactional save function
+public/images/              Editorial concept assets and neutral category placeholder
+tests/                      Storefront, cart, access, validation and image tests
+  database/                 Real PostgreSQL policy and transaction tests via PGlite
+docs/                       Architecture, admin operations and setup instructions
 ```
 
-`@/*` resolves to `src/*`. Routes load products through the repository module, and interactive components receive typed serializable data. Credentials never reach client components. Generated `AGENTS.md` records the installed Next.js version's agent guidance.
+See [architecture](docs/architecture.md) for data boundaries and future payment requirements.
 
-## Future data and admin integration
+## Security
 
-See [architecture.md](docs/architecture.md) for the product read model, Supabase migration path, admin capabilities, cart boundaries, and payment prerequisites. No database SDK or privileged service is required by this phase.
+Every admin read and mutation checks a verified Supabase user and current administrator membership. RLS independently protects tables and Storage. Ordinary authenticated users cannot grant roles. Product saves are transactional and reject stale editor versions. Database constraints validate slugs, paise values and complete publication; immutable audit records capture changes.
 
-The future admin dashboard should manage products, categories, variants, media, and publication status without changing page code. Database rows must be mapped into the storefront contract inside `repository.ts`. Customer-facing prices and availability must be revalidated on the server before any real order is accepted.
+Material/labour costs and operational records live in an admin-only table. Public reads expose published products and a restricted availability projection. Public catalogue images are not confidential; future personal photos have a separate private bucket with no client access policies.
 
-## Design, images and accessibility
+Uploads validate size, actual decoded format, declared MIME and pixel limits, then re-encode to WebP with metadata removed. Object paths are generated UUIDs. Auth cookies are HTTP-only and use Secure on production HTTPS; `SUPABASE_COOKIE_SECURE=false` is only for a local HTTP production preview. Server Actions provide Next.js origin protection; image routes also validate Origin.
 
-Reusable components use semantic navigation, headings and forms, visible focus styles, a skip link, labelled controls, keyboard-operable finish choices, an Escape-dismissable mobile menu, status messages, and reduced-motion support. Product thumbnails offer a full view and an explicitly labelled texture crop of the same concept visual. Finishes and custom text do not alter the image; this is stated on the product page.
+## Verification
 
-Generated images are committed locally, with source prompts and provenance in [imagery.md](docs/imagery.md). The built-in imagegen tool created all six images; none depicts verified inventory. Replace these assets with approved real product photography before launch. Next.js serves responsive, optimized images without third-party image-host dependencies. Typography uses system fonts, so builds do not need a font service.
+| Command             | Purpose                                                                 |
+| ------------------- | ----------------------------------------------------------------------- |
+| `npm run lint`      | ESLint with zero warnings                                               |
+| `npm run typecheck` | TypeScript validation                                                   |
+| `npm run test:db`   | PostgreSQL CRUD, RLS, publication, transaction and Storage policy tests |
+| `npm run build`     | Production compilation                                                  |
+| `npm test`          | Playwright storefront/cart/access and server-validation tests           |
 
-## SEO and launch state
+Install Chromium once with `npx playwright install chromium`. Build before running Playwright. Tests start their own explicit demo-mode server on port 3100 and stop it afterwards. The development preview on port 3000 is independent.
 
-Every public route has a descriptive title, description, readable URL and a single main heading. Unknown products/categories return 404. The preview intentionally uses `noindex, follow` to keep illustrative products and prices out of search results. Before a real launch, approve catalogue content, set the final domain and canonical URLs, add a sitemap, and enable indexing. There is no fabricated product availability, review, or offer schema.
+PGlite runs actual PostgreSQL policies and constraints with fixture Supabase Auth/Storage infrastructure. It does not exercise hosted authentication, PostgREST or Storage HTTP behaviour. Anonymous access, public hosted reads and the signed-in core catalogue workflow have been checked. See [verification results and remaining coverage](docs/phase-3-verification.md). Chromium regression coverage does not establish full accessibility conformance or Safari/Firefox support.
 
-## Environment and security
+## Limitations and deployment
 
-`.env.example` contains sanitized placeholders for future Supabase and Razorpay integrations. `.env.local`, all other environment files, dependency folders, build output, common credential files, and test artifacts are ignored. Public WhatsApp and email details live in `src/config/site.ts` and are intended for publication.
+The bag stores selections locally and recalculates prices from the loaded catalogue. It removes unpublished/deleted variants and caps stocked selections against available quantity. It does not reserve stock, guarantee a quote or accept an order. Future checkout must revalidate every price, quantity and personalisation rule on the server.
 
-Never put secrets in `NEXT_PUBLIC_*` variables or source code. Add runtime validation, server-only adapters, authentication, row-level security and role checks when services are introduced.
+The current small-catalogue foundation loads all published products for filtering and cart reconciliation. Database requests are paginated to avoid silent row truncation; a substantially larger catalogue should move searching and cart hydration to narrower queries. Product editors support up to 100 variants, 30 images and 30 tags. Concurrent product edits reject stale saves; category edits currently use last-write-wins.
 
-## Known tooling limitations
+The site retains its pre-launch `noindex` policy until real catalogue and trading information are approved. Razorpay, customer accounts/photos, orders, taxes and shipping calculations remain out of scope. The feature branch has been pushed with approval. The final review prepares a pull request into `main`; merging and deployment require separate approval.
 
-The full npm audit has five high-severity findings in the development lint dependency chain: `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`. At verification time no patched `braces` release was available; the suggested automatic remedy downgraded the Next.js lint config to version 14. Do not apply that incompatible downgrade blindly. Production-only audit reports zero vulnerabilities.
+The existing nested `San3D/` and newly observed `San3D-1/` folders are excluded from this work and left untouched. Never stage them with a blanket `git add .`.
 
-ESLint 9 remains compatible with the React, accessibility, and import plugins but is marked unsupported by npm. Revisit the lint stack together when compatible updates are available.
-
-## Repository handling
-
-The nested `San3D/` folder is a separate, empty Git initialization pointing to the same GitHub repository. It contains `.git/` and `.kilo/` tooling metadata, no commits and no application files. It has been left untouched and excluded from this work's commit. No files were deleted or moved there.
-
-The Phase 2 commit is local. Pushing or deploying is a separate approved action.
+The known npm audit findings in the development lint dependency chain remain tracked from Phase 2; do not use an incompatible `npm audit fix --force` downgrade. Check `npm audit --omit=dev` independently when preparing deployment.
