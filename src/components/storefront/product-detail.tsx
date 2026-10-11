@@ -61,8 +61,8 @@ export function ProductDetail({ product }: { product: Product }) {
             <button
               key={value}
               onClick={() => setView(value)}
-              aria-pressed={view === value}
-              className={view === value ? "selected" : ""}
+              aria-pressed={currentImage.value === value}
+              className={currentImage.value === value ? "selected" : ""}
             >
               <span className={value === "detail" ? "thumb-crop" : ""}>
                 <Image src={image} alt="" width={72} height={72} />

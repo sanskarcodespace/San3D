@@ -4,7 +4,7 @@
 
 The local `.env.local` contains the project URL and publishable key. Git ignores this file. Next.js uses `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; the public prefix is appropriate for this browser-safe key. The masked secret copied from the dashboard is not usable and has not been saved. A secret/service-role key is not needed for catalogue operations: administrator sessions must pass RLS.
 
-The storefront now reads live Supabase products, categories and availability. The local admin UI and SSR authentication are implemented. The first migration is confirmed applied; the second migration and first admin account are required to finish hosted editing verification.
+Both versioned migrations are installed in the San3D hosted project and one application administrator is configured. Live catalogue reads, fresh login/logout, product editing/duplication/publication/archiving, uploads, replacement/deletion and category imagery have been verified. See [final review](phase-3-verification.md) for evidence and limits. The setup steps below are for a new project; do not rerun them against the configured project.
 
 ## Apply the initial database migration
 

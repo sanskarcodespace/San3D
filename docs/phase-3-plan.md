@@ -1,6 +1,6 @@
 # Phase 3: Supabase catalogue and admin dashboard
 
-Status: local admin dashboard, secure session handling, live storefront adapter, image management and both migrations implemented. Both hosted migrations and the application administrator role are verified. Core authenticated product/category/image, preview, publication and archive workflows passed; see phase-3-verification.md for coverage limits.
+Status: local admin dashboard, secure session handling, live storefront adapter, image management and both migrations implemented. Both hosted migrations and the application administrator role are verified. Final hosted review covered fresh login/logout, product/category/image workflows, duplication, replacement/deletion, preview, publication and archiving, plus 390px/768px/1440px layouts. See phase-3-verification.md for coverage limits.
 
 Branch: `feat/supabase-admin`, created from the pushed Phase 2 commit `ca009a6`.
 

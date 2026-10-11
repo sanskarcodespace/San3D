@@ -6,7 +6,7 @@ Repository: [sanskarcodespace/San3D](https://github.com/sanskarcodespace/San3D).
 
 ## Current status
 
-Phase 3 implementation adds Supabase PostgreSQL, cookie-based authentication, protected catalogue administration and Storage image management. Both migrations and the first application administrator role are verified on the hosted project. Signed-in category creation, product creation/editing, multiple image uploads, preview, publication and archiving have passed browser verification. See [setup instructions](docs/supabase-setup.md).
+Phase 3 implementation adds Supabase PostgreSQL, cookie-based authentication, protected catalogue administration and Storage image management. Both migrations and the first application administrator role are verified on the hosted project. Signed-in category creation and imagery, product creation/editing/duplication, multiple image uploads/replacement/deletion, preview, publication, archiving and fresh login/logout have passed browser verification. See [setup instructions](docs/supabase-setup.md).
 
 The catalogue defaults to live Supabase data. An empty database shows an empty collection; it does not silently substitute demo products. There are no live payments, order creation, fake reviews or automatic stock reservations. Editorial concept imagery is labelled as illustrative. Contact links use the owner's confirmed WhatsApp number and email address.
 
@@ -94,7 +94,7 @@ The bag stores selections locally and recalculates prices from the loaded catalo
 
 The current small-catalogue foundation loads all published products for filtering and cart reconciliation. Database requests are paginated to avoid silent row truncation; a substantially larger catalogue should move searching and cart hydration to narrower queries. Product editors support up to 100 variants, 30 images and 30 tags. Concurrent product edits reject stale saves; category edits currently use last-write-wins.
 
-The site retains its pre-launch `noindex` policy until real catalogue and trading information are approved. Razorpay, customer accounts/photos, orders, taxes and shipping calculations remain out of scope. No push, merge or deployment is authorised for this phase.
+The site retains its pre-launch `noindex` policy until real catalogue and trading information are approved. Razorpay, customer accounts/photos, orders, taxes and shipping calculations remain out of scope. The feature branch has been pushed with approval. The final review prepares a pull request into `main`; merging and deployment require separate approval.
 
 The existing nested `San3D/` and newly observed `San3D-1/` folders are excluded from this work and left untouched. Never stage them with a blanket `git add .`.
 

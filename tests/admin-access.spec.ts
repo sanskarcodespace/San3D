@@ -7,6 +7,7 @@ test("anonymous admin routes redirect to login without leaking catalogue managem
     "/admin",
     "/admin/products",
     "/admin/products/new",
+    "/admin/products/10000000-0000-4000-8000-000000000001",
     "/admin/categories",
     "/admin/media",
   ]) {
@@ -47,26 +48,28 @@ test("image endpoints reject anonymous and cross-origin requests", async ({
   expect(crossOrigin.status()).toBe(403);
 });
 
-test("admin login is accessible at narrow mobile widths and keeps credentials out of URLs", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 780 });
-  await page.goto("/admin/login");
-  await expect(page.getByLabel("Email", { exact: true })).toHaveAttribute(
-    "type",
-    "email",
-  );
-  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
-    "type",
-    "password",
-  );
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBeTruthy();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-    "content",
-    /noindex/,
-  );
-});
+for (const width of [320, 390, 768, 1440]) {
+  test(`admin login stays accessible at ${width}px and keeps credentials out of URLs`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/admin/login");
+    await expect(page.getByLabel("Email", { exact: true })).toHaveAttribute(
+      "type",
+      "email",
+    );
+    await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
+      "type",
+      "password",
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBeTruthy();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      /noindex/,
+    );
+  });
+}
