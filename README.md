@@ -6,7 +6,7 @@ Repository: [sanskarcodespace/San3D](https://github.com/sanskarcodespace/San3D).
 
 ## Current status
 
-Phase 3 implementation adds Supabase PostgreSQL, cookie-based authentication, protected catalogue administration and Storage image management. The first database migration is confirmed applied. The second migration and first administrator account must be configured before the complete editing workflow can be verified against the hosted project. See [setup instructions](docs/supabase-setup.md).
+Phase 3 implementation adds Supabase PostgreSQL, cookie-based authentication, protected catalogue administration and Storage image management. Both migrations and the first application administrator role are verified on the hosted project. Signed-in category creation, product creation/editing, multiple image uploads, preview, publication and archiving have passed browser verification. See [setup instructions](docs/supabase-setup.md).
 
 The catalogue defaults to live Supabase data. An empty database shows an empty collection; it does not silently substitute demo products. There are no live payments, order creation, fake reviews or automatic stock reservations. Editorial concept imagery is labelled as illustrative. Contact links use the owner's confirmed WhatsApp number and email address.
 
@@ -86,7 +86,7 @@ Uploads validate size, actual decoded format, declared MIME and pixel limits, th
 
 Install Chromium once with `npx playwright install chromium`. Build before running Playwright. Tests start their own explicit demo-mode server on port 3100 and stop it afterwards. The development preview on port 3000 is independent.
 
-PGlite runs actual PostgreSQL policies and constraints with fixture Supabase Auth/Storage infrastructure. It does not exercise hosted authentication, PostgREST or Storage HTTP behaviour. Anonymous access and public hosted reads have been checked; signed-in admin editing and upload checks remain pending account/project configuration. Chromium regression coverage does not establish full accessibility conformance or Safari/Firefox support.
+PGlite runs actual PostgreSQL policies and constraints with fixture Supabase Auth/Storage infrastructure. It does not exercise hosted authentication, PostgREST or Storage HTTP behaviour. Anonymous access, public hosted reads and the signed-in core catalogue workflow have been checked. See [verification results and remaining coverage](docs/phase-3-verification.md). Chromium regression coverage does not establish full accessibility conformance or Safari/Firefox support.
 
 ## Limitations and deployment
 

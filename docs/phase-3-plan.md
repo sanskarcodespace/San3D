@@ -1,6 +1,6 @@
 # Phase 3: Supabase catalogue and admin dashboard
 
-Status: local admin dashboard, secure session handling, live storefront adapter, image management and both migrations implemented. Initial hosted migration confirmed applied. Atomic-save migration application, administrator setup and authenticated hosted workflow verification remain pending.
+Status: local admin dashboard, secure session handling, live storefront adapter, image management and both migrations implemented. Both hosted migrations and the application administrator role are verified. Core authenticated product/category/image, preview, publication and archive workflows passed; see phase-3-verification.md for coverage limits.
 
 Branch: `feat/supabase-admin`, created from the pushed Phase 2 commit `ca009a6`.
 
@@ -65,8 +65,8 @@ After implementation and verification, create the local commit `feat: integrate 
 
 The San3D Supabase project is created and its Auth settings endpoint responded successfully using the configured publishable key. Packages `@supabase/server`, `@supabase/ssr`, `@supabase/supabase-js`, `server-only` and `zod` are installed. PGlite is a development-only dependency for local PostgreSQL tests.
 
-The initial migration is `supabase/migrations/202610100001_catalogue.sql`. Eleven local tests cover database CRUD, RLS, publication integrity, private-field access, image path policies and admin revocation. These execute PostgreSQL with fixture Auth/Storage infrastructure; hosted Auth, PostgREST and Storage HTTP behaviour are not yet verified. The application now uses the live Supabase catalogue by default. The original demo catalogue is isolated behind explicit local development/test configuration. Admin overview, product/category editors, private preview, publication actions and image/media management are implemented.
+The initial migration is `supabase/migrations/202610100001_catalogue.sql`. Eleven local tests cover database CRUD, RLS, publication integrity, private-field access, image path policies and admin revocation. These execute PostgreSQL with fixture Auth/Storage infrastructure; hosted Auth, PostgREST and Storage uploads have also been exercised through the signed-in UI. The application now uses the live Supabase catalogue by default. The original demo catalogue is isolated behind explicit local development/test configuration. Admin overview, product/category editors, private preview, publication actions and image/media management are implemented.
 
-Follow [Supabase setup](supabase-setup.md) to apply the migration. The user confirmed the initial migration succeeded; its public endpoints return HTTP 200. No hosted SQL migrations or admin-account changes have been performed by the agent. The second migration must still be applied by the user. No secrets belong in chat, migrations, committed documentation or source code.
+Both migrations are installed. The user created the Auth account privately and explicitly approved granting its San3D application administrator role. Role membership, RLS, private customer-photo storage and anonymous production-cost denial were verified. Setup instructions remain available in [Supabase setup](supabase-setup.md). No secrets belong in chat, migrations, committed documentation or source code.
 
 References: [Supabase Next.js quickstart](https://supabase.com/docs/guides/auth/quickstarts/nextjs), [SSR client setup](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [API key types](https://supabase.com/docs/guides/getting-started/api-keys).
