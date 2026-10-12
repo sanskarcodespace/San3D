@@ -4,7 +4,10 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return response;
+  if (!url || !key) {
+    response.headers.set("Cache-Control", "private, no-store");
+    return response;
+  }
   const client = createServerClient(url, key, {
     cookieOptions: {
       httpOnly: true,

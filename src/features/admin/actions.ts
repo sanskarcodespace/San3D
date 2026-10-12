@@ -67,7 +67,8 @@ export async function signIn(
 }
 export async function signOut() {
   const client = await sessionClient();
-  await client.auth.signOut();
+  const { error } = await client.auth.signOut();
+  if (error) throw new Error("Sign-out could not be confirmed. Please try again.");
   redirect("/admin/login");
 }
 export async function saveProduct(input: unknown): Promise<ActionResult> {

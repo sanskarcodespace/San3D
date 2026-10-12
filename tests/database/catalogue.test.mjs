@@ -9,12 +9,17 @@ const db = new PGlite();
 const admin = "10000000-0000-4000-8000-000000000001";
 const customer = "10000000-0000-4000-8000-000000000002";
 const imagePath = "catalogue/20000000-0000-4000-8000-000000000001.webp";
+const adminSession = "40000000-0000-4000-8000-000000000001";
+const customerSession = "40000000-0000-4000-8000-000000000002";
 let productId, variantId;
 
-async function identity(role, uid = "") {
+async function identity(role, uid = "", session = uid === admin ? adminSession : customerSession) {
   await db.exec("reset role");
   await db.query("select set_config('request.jwt.claim.sub', $1, false)", [
     uid,
+  ]);
+  await db.query("select set_config('request.jwt.claims', $1, false)", [
+    JSON.stringify({ sub: uid, session_id: session }),
   ]);
   assert.ok(["anon", "authenticated"].includes(role));
   await db.exec(`set role ${role}`);
@@ -30,7 +35,11 @@ before(async () => {
   await db.exec(`
     create role anon nologin; create role authenticated nologin;
     create schema auth;
-    create table auth.users(id uuid primary key);
+    create table auth.users(id uuid primary key, deleted_at timestamptz, banned_until timestamptz);
+    create table auth.sessions(id uuid primary key, user_id uuid references auth.users(id) on delete cascade, not_after timestamptz);
+    create function auth.jwt() returns jsonb language sql stable as $$
+      select nullif(current_setting('request.jwt.claims', true), '')::jsonb;
+    $$;
     create function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
     $$;
@@ -63,10 +72,14 @@ before(async () => {
       "utf8",
     ),
   );
+  await db.exec(await readFile(new URL(
+    "../../supabase/migrations/202610110001_session_security.sql", import.meta.url), "utf8"));
   await db.query("insert into auth.users(id) values ($1), ($2)", [
     admin,
     customer,
   ]);
+  await db.query("insert into auth.sessions(id,user_id) values ($1,$2), ($3,$4)",
+    [adminSession, admin, customerSession, customer]);
   await db.query("insert into public.admin_roles(user_id) values ($1)", [
     admin,
   ]);
@@ -385,6 +398,45 @@ test("atomic saves preserve IDs, roll back failures, prevent stale edits and rej
   await db.query("delete from products where id=$1", [saved.id]);
 });
 
+test("missing, malformed and another user's session cannot authorise an administrator", async () => {
+  for (const session of ["", "invalid", customerSession]) {
+    await identity("authenticated", admin, session);
+    assert.equal((await rows("select is_catalogue_admin() as allowed"))[0].allowed, false);
+    await denied("insert into products(name,slug) values ('Forbidden','forbidden')");
+    assert.deepEqual(await rows("select * from product_production"), []);
+    assert.deepEqual(await rows("delete from storage.objects returning id"), []);
+  }
+});
+
+test("expired, revoked, banned and soft-deleted sessions deny reads and mutations", async () => {
+  const scenarios = [
+    ["update auth.sessions set not_after=now()-interval '1 second' where id=$1", adminSession,
+      "update auth.sessions set not_after=null where id=$1"],
+    ["update auth.users set banned_until=now()+interval '1 day' where id=$1", admin,
+      "update auth.users set banned_until=null where id=$1"],
+    ["update auth.users set deleted_at=now() where id=$1", admin,
+      "update auth.users set deleted_at=null where id=$1"],
+    ["delete from auth.sessions where id=$1", adminSession,
+      `insert into auth.sessions(id,user_id) values ($1,'${admin}')`],
+  ];
+  for (const [change, id, restore] of scenarios) {
+    await db.exec("reset role");
+    await db.query(change, [id]);
+    await identity("authenticated", admin);
+    assert.equal((await rows("select is_catalogue_admin() as allowed"))[0].allowed, false);
+    await denied("insert into products(name,slug) values ('Forbidden','forbidden')");
+    await denied("select save_catalogue_product('{}'::jsonb)");
+    await denied("insert into storage.objects(bucket_id,name) values ('catalogue-images',$1)", "42501", [imagePath]);
+    assert.deepEqual(await rows("select * from audit_logs"), []);
+    assert.deepEqual(await rows("update categories set name='Tampered' returning id"), []);
+    assert.deepEqual(await rows("delete from storage.objects returning id"), []);
+    await db.exec("reset role");
+    await db.query(restore, [id]);
+    await identity("authenticated", admin);
+    assert.equal((await rows("select is_catalogue_admin() as allowed"))[0].allowed, true);
+  }
+});
+
 test("revoked membership denies the next mutation with the same authenticated identity", async () => {
   await db.exec("reset role");
   await db.query("delete from admin_roles where user_id=$1", [admin]);
@@ -395,4 +447,47 @@ test("revoked membership denies the next mutation with the same authenticated id
   );
   await denied("insert into products(name,slug) values ('Revoked','revoked')");
   assert.deepEqual(await rows("select * from audit_logs"), []);
+});
+
+
+test("every sensitive table retains RLS and no client can read Auth sessions", async () => {
+  await db.exec("reset role");
+  const tables = await rows("select relname, relrowsecurity from pg_class join pg_namespace n on n.oid=relnamespace where n.nspname='public' and relkind='r'");
+  assert.deepEqual(tables.map((table) => table.relname).sort(), [
+    "admin_roles", "audit_logs", "categories", "inventory", "product_images",
+    "product_production", "product_tags", "products", "tags", "variants",
+  ]);
+  assert.ok(tables.every((table) => table.relrowsecurity));
+  await identity("authenticated", customer);
+  await denied("select * from auth.sessions");
+  await denied("select * from auth.users");
+});
+
+test("hard-deleted users lose membership and cannot use an existing identity", async () => {
+  await db.exec("reset role");
+  await db.query("insert into admin_roles(user_id) values ($1)", [admin]);
+  await db.query("delete from auth.users where id=$1", [admin]);
+  await identity("authenticated", admin);
+  assert.equal((await rows("select is_catalogue_admin() as allowed"))[0].allowed, false);
+  assert.deepEqual(await rows("select * from admin_roles"), []);
+  await denied("insert into products(name,slug) values ('Deleted','deleted')");
+});
+
+test("authorization function privileges cannot be rewritten or expanded by clients", async () => {
+  await db.exec("reset role");
+  const [fn] = await rows(`select prosecdef, proconfig from pg_proc
+    where oid='san3d_private.is_admin()'::regprocedure`);
+  assert.equal(fn.prosecdef, true);
+  assert.ok(fn.proconfig.includes('search_path=""'));
+  const [acl] = await rows(`select exists(select 1 from pg_proc p,
+    lateral aclexplode(coalesce(p.proacl, acldefault('f',p.proowner))) a
+    where p.oid='san3d_private.is_admin()'::regprocedure
+      and a.grantee=0 and a.privilege_type='EXECUTE') as public_execute`);
+  assert.equal(acl.public_execute, false);
+  for (const role of ["anon", "authenticated"]) {
+    await identity(role, role === "authenticated" ? customer : "");
+    assert.equal((await rows("select san3d_private.is_admin() as allowed"))[0].allowed, false);
+    await denied("create or replace function san3d_private.is_admin() returns boolean language sql as 'select true'");
+    await denied("alter table public.products disable row level security");
+  }
 });

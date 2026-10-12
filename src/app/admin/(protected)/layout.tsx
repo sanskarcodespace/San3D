@@ -1,3 +1,4 @@
+import { SessionBoundary } from "@/features/admin/components/session-boundary";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAdmin, AdminAccessError } from "@/features/admin/auth";
@@ -14,32 +15,34 @@ export default async function ProtectedLayout({
     throw error;
   }
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <Link href="/admin" className="admin-brand">
-          San3D<span>STUDIO / CATALOGUE</span>
-        </Link>
-        <nav aria-label="Admin navigation">
-          <Link href="/admin">Overview</Link>
-          <Link href="/admin/products">Products</Link>
-          <Link href="/admin/categories">Categories</Link>
-          <Link href="/admin/media">Media library</Link>
-          <Link href="/" target="_blank">
-            View storefront ↗
+    <SessionBoundary>
+      <div className="admin-shell">
+        <aside className="admin-sidebar">
+          <Link href="/admin" className="admin-brand">
+            San3D<span>STUDIO / CATALOGUE</span>
           </Link>
-        </nav>
-        <form action={signOut}>
-          <button className="admin-secondary">Sign out</button>
-        </form>
-        <p className="admin-aside-note">
-          Thoughtfully made.
-          <br />
-          Simply managed.
-        </p>
-      </aside>
-      <main className="admin-main" id="main">
-        {children}
-      </main>
-    </div>
+          <nav aria-label="Admin navigation">
+            <Link href="/admin">Overview</Link>
+            <Link href="/admin/products">Products</Link>
+            <Link href="/admin/categories">Categories</Link>
+            <Link href="/admin/media">Media library</Link>
+            <Link href="/" target="_blank">
+              View storefront ↗
+            </Link>
+          </nav>
+          <form action={signOut}>
+            <button className="admin-secondary">Sign out</button>
+          </form>
+          <p className="admin-aside-note">
+            Thoughtfully made.
+            <br />
+            Simply managed.
+          </p>
+        </aside>
+        <main className="admin-main" id="main">
+          {children}
+        </main>
+      </div>
+    </SessionBoundary>
   );
 }

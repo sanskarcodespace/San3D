@@ -26,6 +26,14 @@ The editor saves products, variants, images, tags and production settings in one
 3. Run it once as `postgres`. Expect success with no rows returned. This adds the role-protected `save_catalogue_product` function; it does not insert or publish products.
 4. Report success before hosted product-editing verification. Do not rerun the first migration.
 
+## Apply the session-security migration (Phase 4 — pending)
+
+`supabase/migrations/202610110001_session_security.sql` is version-controlled but **has been applied only to staging `tdmiwxraesyzvdcuqclf`, not production**. After deployment approval, run the full file once as the database owner after the two previous migrations. It replaces the private admin predicate without modifying accounts, products or memberships. It needs owner access to `auth.users` and `auth.sessions`; do not grant these tables to application clients.
+
+The predicate requires a current admin membership, an existing Auth session matching the verified JWT session ID and user, an unexpired `not_after`, and an account that is neither soft-deleted nor currently banned. Supabase verifies the JWT's signature and expiry. Removing a session or role denies the next protected database request; data already downloaded cannot be recalled. Project inactivity/refresh settings still need hosted verification.
+
+First verify in staging using separate admin and ordinary-user accounts: valid login, logout, role revocation with an existing session, expired/invalid tokens, banned/deleted users and direct REST/Storage access. Never revoke or delete the sole production administrator to perform these tests. A separate staging project is now provisioned and migrated; real-account verification is in progress. Production migration remains prohibited without separate approval. See [Phase 4 results and launch gates](phase-4-verification.md).
+
 ## Create the first administrator
 
 After the migration is applied:
