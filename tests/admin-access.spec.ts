@@ -73,3 +73,21 @@ for (const width of [320, 390, 768, 1440]) {
     );
   });
 }
+
+
+test("session endpoint denies anonymous callers and never caches authorisation", async ({ request }) => {
+  const response = await request.get("/api/admin/session");
+  expect(response.status()).toBe(403);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  expect(await response.json()).toEqual({ authorised: false });
+});
+
+test("security headers protect pages without breaking storefront rendering", async ({ page }) => {
+  const response = await page.goto("/");
+  expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response?.headers()["x-frame-options"]).toBe("DENY");
+  expect(response?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  await page.goto("/admin/login");
+  const response2 = await page.request.get("/admin/login");
+  expect(response2.headers()["cache-control"]).toContain("no-store");
+});

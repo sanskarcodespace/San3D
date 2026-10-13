@@ -94,7 +94,7 @@ The bag stores selections locally and recalculates prices from the loaded catalo
 
 The current small-catalogue foundation loads all published products for filtering and cart reconciliation. Database requests are paginated to avoid silent row truncation; a substantially larger catalogue should move searching and cart hydration to narrower queries. Product editors support up to 100 variants, 30 images and 30 tags. Concurrent product edits reject stale saves; category edits currently use last-write-wins.
 
-The site retains its pre-launch `noindex` policy until real catalogue and trading information are approved. Razorpay, customer accounts/photos, orders, taxes and shipping calculations remain out of scope. The feature branch has been pushed with approval. The final review prepares a pull request into `main`; merging and deployment require separate approval.
+The site retains its pre-launch `noindex` policy until real catalogue and trading information are approved. Razorpay, customer accounts/photos, orders, taxes and shipping calculations remain out of scope. The feature branch has been pushed with approval. The Phase 3 pull request is open; merging and deployment require separate approval. Phase 4 hardening is local on `codex/phase4-security`, with a pending session-security migration. See [Phase 4 results and launch gates](docs/phase-4-verification.md); current launch status is NOT READY until those gates are cleared.
 
 The existing nested `San3D/` and newly observed `San3D-1/` folders are excluded from this work and left untouched. Never stage them with a blanket `git add .`.
 

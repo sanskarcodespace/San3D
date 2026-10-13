@@ -32,3 +32,9 @@ pnpm-debug.log*
 # Browser test artifacts
 /playwright-report/
 /test-results/
+
+# Isolated staging preview output
+/.next-staging/
+
+# Supabase CLI local cache (not project migrations)
+/supabase/.temp/
