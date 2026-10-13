@@ -2,7 +2,7 @@
 
 Review: 11–12 October 2026. Status: **NOT READY** for production launch.
 
-Active application: `/Users/sanskar/Desktop/San3D`, origin `https://github.com/sanskarcodespace/San3D.git`. Local work is on `codex/phase4-security`, based on pushed Phase 3 commit `340b3e4`. Nothing in this phase has been pushed, merged or deployed. No production data or accounts were changed. A separate staging project, `tdmiwxraesyzvdcuqclf`, was subsequently created by the user and explicitly approved for migrations. Production `jpzcmamxvcnriejohjwn` remains unchanged. See the staging results below.
+Active application: `/Users/sanskar/Desktop/San3D`, origin `https://github.com/sanskarcodespace/San3D.git`. Local work is on `codex/phase4-security`, based on pushed Phase 3 commit `340b3e4`. The original security commit 85919ee was pushed with approval; PR #2 targets feat/supabase-admin. No merge or deployment has occurred. No production data or accounts were changed. A separate staging project, `tdmiwxraesyzvdcuqclf`, was subsequently created by the user and explicitly approved for migrations. Production `jpzcmamxvcnriejohjwn` remains unchanged. See the staging results below.
 
 ## Findings and fixes
 
@@ -34,7 +34,7 @@ The registry still reports braces 3.0.3 as latest, without a patched release. Up
 | `npm run lint` | Pass, zero warnings | Local active repository only |
 | `npm run typecheck` | Pass | Local TypeScript |
 | `npm run build` | Pass | Local optimized production build; not a deployment |
-| `npm run test:db` | 18/18 pass (16 database + 2 target-isolation tests) | PGlite PostgreSQL with fixture Auth/Storage infrastructure |
+| `npm run test:db` | 21/21 pass (16 database + 5 tooling isolation/approval tests) | PGlite PostgreSQL with fixture Auth/Storage infrastructure |
 | `npm run test` and `npm test` | 29/29 pass on each run | Chromium against local production-mode demo server |
 | Product CRUD, atomic save, stale edit rejection, integer prices, invalid publication rollback, publish/unpublish/archive, child deletion and image-reference protection | Pass | Local database suite; no production mutations |
 | Regular-user write denial, no self-grant, private costs/audit denial, all ten application tables retain RLS | Pass | Local PostgreSQL identities, not real hosted test users |
@@ -52,7 +52,7 @@ The registry still reports braces 3.0.3 as latest, without a patched release. Up
 | Browser login/logout, old-token denial after global logout, oversized upload 413, malformed image 400, valid uploads and deletion of own unreferenced uploads | Pass | Local frontend on localhost:3200 with real hosted staging backend |
 | Session not_after expiry, active role revocation, existing JWT mutation denial, cached dashboard redirect and API 403 | Pass | Real staging session and membership changed with owner access; no production changes |
 | Naturally expired signed JWT, hosted banned/deleted account and refresh-token lifecycle | **Not verified on hosted backend** | Local database cases pass; not_after expiry is not signed-JWT expiry |
-| Hosted product/category persistence and image replacement/deletion after new migration | **Pending** | Run in isolated staging after migration; existing production records were not edited/deleted |
+| Hosted product/category persistence, image replacement/shared-image protection and approved duplicate deletion | Pass | 13 October staging UI runs; exact fixtures and retained data in staging-verification.md |
 
 A new RLS coverage test initially expected eleven tables instead of the actual ten; it was corrected to assert the explicit table-name list. The final database suite passes. No application failure was hidden or test skipped.
 
@@ -126,3 +126,36 @@ All paths below are relative to the active repository. The changes are related t
 - `tests/database/catalogue.test.mjs`
 - `tests/database/staging-target.test.mjs`
 - `tsconfig.json`
+
+## Staging continuation — 13 October 2026
+
+Commit `85919ee` was pushed with approval and is under review in PR #2 (`codex/phase4-security` → `feat/supabase-admin`); earlier “not pushed” statements describe the original verification snapshot. No merge or deployment has occurred.
+
+After a separately approved staging-only role restoration, the new real UI workflow suite passed category create/edit/image/order persistence, product create/edit/preview/reload, image reorder, duplication with stock reset, publish/unpublish/archive, public detail without redeployment, private-cost denial and shared-image deletion denial. Editor layouts passed at 390, 768 and 1440px. See `staging-verification.md` for exact retained fixture IDs and scope. This supersedes the pending status for those specific workflows, not the broader integration cases. Subsequent explicitly approved fixture tests also passed category/product image replacement, shared-image preservation and duplicate deletion with child-row cascades. The original archived product remains intact.
+
+Natural JWT expiry/refresh observation is running with tokens held only in memory; only pre-expiry authorization has passed so far. Do not count pending timer assertions as successful. New local verification scripts are `scripts/verify-staging-workflows.mjs` and `scripts/verify-staging-expiry.mjs`. Application source, migrations, production and nested directories were not modified in this continuation. Launch status remains NOT READY.
+
+The new fixture-specific runner is `scripts/verify-staging-replacement.mjs`; all three new scripts pass lint and syntax checks. No application source changed, so the prior build and 18/29 regression counts remain historical results at 85919ee, not fresh full-suite results for this continuation. Natural-expiry assertions are still pending.
+
+## Local review completion — 13 October 2026
+
+Scope reviewed: two updated verification documents, three new staging-only runners and three new script-guard tests. No application source, dependency versions, database migrations, credentials or nested checkout files changed. PR #2 remains open against feat/supabase-admin; no additional PR was created.
+
+Fresh local commands all passed: lint, typecheck, build, npm run test (29/29), npm test (29/29), test:db (21/21 after adding approval/identity guards). Both requested audit commands ran: full audit reports five high development entries (expected nonzero audit status), omit-dev reports zero. No downgrade or forced fix was applied. The warnings from Playwright's FORCE_COLOR/NO_COLOR environment do not represent failing tests.
+
+Fresh read-only staging REST denied anonymous costs, audit logs, inventory and admin-role reads with HTTP 401; the archived fixture remained invisible. The existing local staging session API returned HTTP 403 and no-store. No authenticated mutation suite was rerun during this final review.
+
+Script review tightened execution: every new runner requires --approved-staging-state-changes and the exact synthetic admin identity before network work; the fixture cleanup additionally requires --approved-fixtures and verifies exact IDs. These flags record operator intent, not a substitute for fresh user approval. Scripts never grant roles or run migrations. Passwords come from ignored local environment files, public-key clients perform tests, and no raw exception/page content or token is printed. The workflow now uses a separate anonymous browser context; nonempty duplicate inventory, explicit privilege-denial errors and successful Storage listing checks prevent several false-positive assertions. Real workflow passes described above preceded these test-harness refinements; the destructive runners were deliberately not rerun. Guard tests and lint/syntax checks passed for the revised scripts.
+
+The natural-expiry process still holds its original token only in memory and is awaiting 09:35:40 IST. The user approved completion of its own refresh/logout steps in this turn; no role change, other-session revocation or record deletion is approved. Until its output is collected, natural expiry and refresh remain UNVERIFIED. This limitation is preserved in this commit; its title does not assert that every hosted launch gate is complete.
+
+Remaining unverified checks include refresh-token reuse-window behavior, browser refresh failure handling, hosted banned/deleted accounts and broader live-data search/filter/cart coverage. HTTPS deployment configuration, production migration approval, accessibility/browser breadth and production operations remain launch gates. Status stays NOT READY.
+
+Files in this follow-up:
+
+- docs/phase-4-verification.md
+- docs/staging-verification.md
+- scripts/verify-staging-expiry.mjs
+- scripts/verify-staging-workflows.mjs
+- scripts/verify-staging-replacement.mjs
+- tests/database/staging-script-guards.test.mjs

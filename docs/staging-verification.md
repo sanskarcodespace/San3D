@@ -46,3 +46,33 @@ node --env-file=.env.staging.local --env-file=.env.staging-admin.local scripts/p
 ```
 
 This verifies both fixed UUID/email pairs, generates independent strong passwords, confirms only those test accounts and saves each successful credential privately. It never grants a role. Do not run it against production; the same strict target guard applies. The staging secret is used only in this server-side provisioning script, never in UI bundles or the regular verification runner.
+
+## Continuation — 13 October 2026 (in progress)
+
+The user explicitly approved restoring only the synthetic admin role. A provisioning API attempt was denied with PostgreSQL 42501; no grants were broadened. The approved owner SQL grant then succeeded and ordinary-user login/RPC verified administrator access. The viewer remains unprivileged. No migrations were rerun.
+
+`verify-staging-workflows.mjs` passed real UI category creation/image/order/edit persistence; product draft creation, preview, image reordering, edit/reload persistence; editor overflow checks at 390/768/1440px; duplication with unique slug, draft status and zero stock; publication and public detail without redeployment; anonymous private-cost denial; shared-image deletion denial; unpublication and archival. The test uses generated images and publishable-key sessions against staging with a local frontend. Initial attempts exposed overly strict test selectors for labels containing textarea/select content, not failed database saves; those selectors were corrected. Existing fixtures are retained.
+
+Successful run fixture manifest:
+
+- Archived original product: `983e4513-96e7-4b0b-9799-3992fb18ef86`.
+- Draft duplicate: `a45722ba-0381-492d-a9b3-d0c728318cfc`.
+- Category: `bb9f8ac7-7f35-460f-b583-3abe5db7ff0e`.
+- Category image: `catalogue/a9fb7dd9-c944-4d66-afc1-f30edaa4b645.webp`.
+- Shared product images: `catalogue/9231487f-928a-45ce-9c92-565e4cf2f6d4.webp`, `catalogue/1f4d2a35-5d9d-49c4-8a4d-b36e524b10dc.webp`.
+- Diagnostic attempts retained categories `3bf21295-077c-450f-ab05-927ad6900f3f`, `2dfa16a5-1d75-460c-8621-2bb0f3c0487d`, `f234e04b-e4d8-41f4-b8de-69b9607dacfd` and their synthetic images. No cleanup of these is authorized or attempted.
+
+`verify-staging-expiry.mjs` started an isolated session with auto-refresh disabled and passed pre-expiry admin authorization. It keeps tokens in memory and waits for actual JWT expiry plus 65 seconds, without modifying session timestamps or project settings. The observation is scheduled for **13 October 2026, 09:35:40 IST (04:05:40 UTC)**. The test then checks Auth/REST expiry denial, refresh after expiry, renewed authorization, local-session logout and denial of retained access/refresh tokens. **These later assertions are pending, not passed.** Do not globally sign out the synthetic admin or revoke its role during this observation; that would confound natural expiry. This run does not test refresh-token reuse outside the provider reuse window or browser refresh failure handling.
+
+The user subsequently approved the exact category-image and duplicate-product deletions. `verify-staging-replacement.mjs --approved-fixtures` passed category replacement and approved old-object removal, product replacement with shared-object preservation, reload persistence, duplicate deletion with image-row/variant cascades, and preservation of the archived original and shared upload. The duplicate listed above is now deleted; its shared Storage files remain. Retained replacement category image: `catalogue/3f3bb39c-520f-4921-9d68-80d3fd2f7b77.webp`. Retained replacement product image: `catalogue/9421598e-f04c-4716-bfea-83a90b642b51.webp`. No other cleanup was performed. Hosted ban/deletion cases, broader storefront search/filter/cart integration with these fixtures and refresh-token reuse remain outstanding. New scripts and this update are local only; no further commit or push has occurred.
+
+
+## Final script review and local regression — 13 October 2026
+
+For future runs, obtain fresh approval before session or fixture mutations and pass `--approved-staging-state-changes` to each new runner. The replacement runner also requires `--approved-fixtures`; its original approved duplicate has already been deleted, so it is historical fixture-specific evidence, not a generally rerunnable cleanup tool. Do not retarget it without reviewing the new fixtures and obtaining approval. Never rerun migrations for these tests.
+
+All new scripts pin the staging project through stagingConfig, verify the synthetic administrator identity, use only public-key clients for assertions and keep credentials out of logs. They assume localhost:3200 is the preview started with scripts/staging-preview.mjs and the pinned staging environment; verify that prerequisite before execution. They do not independently attest the configuration of an arbitrary process on that port. Automatic browser dialogs are restricted to the run's synthetic archive or explicitly approved duplicate deletion. No general cleanup, role management or account deletion is performed. Local-session sign-out in finally is a state change and is covered by the required fresh session approval.
+
+Final review removed raw browser exception/status logging, tightened duplicate-stock and Storage deletion assertions, and separated the public browser context. These revised mutation runners were not rerun without new approval. Approval/identity guard tests pass for all three scripts; database plus tooling tests total 21/21. Lint, typecheck, build and two Playwright runs (29/29 each) passed. Audit remains five high development entries and zero production entries. Read-only staging private-table denials, archived-product invisibility and anonymous no-store API denial passed again.
+
+The existing expiry process is still pending at this review snapshot. User approval now covers its own refresh/logout sequence after the scheduled observation. Do not claim natural signed-JWT expiry, refresh success or revoked-refresh denial until its actual output is collected. No role was granted/revoked and no test records were deleted during this final review. Further destructive work requires new explicit approval.
